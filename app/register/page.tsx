@@ -12,6 +12,7 @@ import { Sparkles, ArrowRight, Mail, Lock, User } from "lucide-react"
 export default function RegisterPage() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const [confirmPassword, setConfirmPassword] = useState("")
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState("")
     const { register } = useAuth()
@@ -19,11 +20,17 @@ export default function RegisterPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+
+        if (password !== confirmPassword) {
+            setError("Passwords do not match")
+            return
+        }
+
         setIsLoading(true)
         setError("")
 
         try {
-            await register(email, password)
+            await register(email, password, confirmPassword)
             router.push("/discovery")
         } catch (err) {
             setError("Registration failed. Please try again.")
@@ -85,6 +92,22 @@ export default function RegisterPage() {
                                     className="pl-12 h-14 rounded-2xl bg-secondary/30 border-none focus-visible:ring-2 focus-visible:ring-primary"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="confirmPassword">Confirm Password</Label>
+                            <div className="relative">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input
+                                    id="confirmPassword"
+                                    type="password"
+                                    placeholder="••••••••"
+                                    className="pl-12 h-14 rounded-2xl bg-secondary/30 border-none focus-visible:ring-2 focus-visible:ring-primary"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
                                     required
                                 />
                             </div>

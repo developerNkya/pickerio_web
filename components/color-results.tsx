@@ -4,8 +4,9 @@ import type React from "react"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Camera, Check, Copy, Palette, ChevronRight } from "lucide-react"
-import type { ColorInfo } from "@/app/page"
+import { useAuth } from "@/lib/auth-context"
+import { ArrowLeft, Camera, Check, Copy, Palette, ChevronRight, Save, Download, Sparkles } from "lucide-react"
+import type { ColorInfo } from "@/app/discovery/page"
 import { ColorDetailModal } from "@/components/color-detail-modal"
 
 interface ColorResultsProps {
@@ -46,12 +47,30 @@ function getTechnicalName(hex: string): string {
 export function ColorResults({ colors, onNewPhoto, onBack }: ColorResultsProps) {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const [selectedColor, setSelectedColor] = useState<ColorInfo | null>(null)
+  const { user, savePalette } = useAuth()
+  const [isSaved, setIsSaved] = useState(false)
 
   const copyToClipboard = async (text: string, index: number, e: React.MouseEvent) => {
     e.stopPropagation()
     await navigator.clipboard.writeText(text)
     setCopiedIndex(index)
     setTimeout(() => setCopiedIndex(null), 2000)
+  }
+
+  const handleSave = () => {
+    savePalette(colors.map(c => c.hex), `Discovery ${new Date().toLocaleDateString()}`)
+    setIsSaved(true)
+    setTimeout(() => setIsSaved(false), 3000)
+  }
+
+  const handleExport = () => {
+    const config = colors.reduce((acc, color, i) => {
+      acc[`color-${i + 1}`] = color.hex
+      return acc
+    }, {} as any)
+    const tailwind = JSON.stringify({ theme: { extend: { colors: config } } }, null, 2)
+    navigator.clipboard.writeText(tailwind)
+    alert("Tailwind config copied to clipboard!")
   }
 
   return (
@@ -176,14 +195,37 @@ export function ColorResults({ colors, onNewPhoto, onBack }: ColorResultsProps) 
         </div>
       </div>
 
-      <div className="sticky bottom-0 p-6 bg-gradient-to-t from-background via-background to-transparent pt-12 relative z-10">
-        <div className="max-w-2xl mx-auto">
+      <div className="sticky bottom-0 p-6 bg-gradient-to-t from-background via-background to-transparent pt-12 relative z-10 flex flex-col gap-4">
+        <div className="max-w-2xl mx-auto w-full grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Button
+            onClick={handleSave}
+            variant="outline"
+            className={`h-14 rounded-2xl gap-2 transition-all ${isSaved ? 'bg-primary/10 border-primary text-primary' : ''}`}
+            disabled={isSaved}
+          >
+            {isSaved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+            {isSaved ? "Saved to History" : "Save to History"}
+          </Button>
+          <Button
+            onClick={handleExport}
+            variant="outline"
+            className="h-14 rounded-2xl gap-2"
+          >
+            <Download className="w-4 h-4" />
+            <span className="flex items-center gap-1.5">
+              Export Tailwind
+              <span className="text-[10px] bg-accent text-accent-foreground px-1.5 py-0.5 rounded-full font-bold">PRO</span>
+            </span>
+          </Button>
+        </div>
+
+        <div className="max-w-2xl mx-auto w-full">
           <Button
             onClick={onNewPhoto}
             size="lg"
-            className="w-full h-16 rounded-2xl text-base gap-3 bg-foreground text-background hover:bg-foreground/90 shadow-lg"
+            className="w-full h-16 rounded-2xl text-base gap-3 bg-foreground text-background hover:bg-foreground/90 shadow-xl group"
           >
-            <Camera className="w-5 h-5" />
+            <Camera className="w-5 h-5 group-hover:rotate-12 transition-transform" />
             Discover New Colors
           </Button>
         </div>
