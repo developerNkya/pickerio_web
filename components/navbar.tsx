@@ -2,8 +2,12 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/lib/auth-context"
+import { LogOut, User } from "lucide-react"
 
 export function Navbar() {
+  const { isAuthenticated, logout, user } = useAuth()
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
       <div className="container mx-auto px-6 h-16 flex items-center justify-between">
@@ -23,11 +27,34 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link href="/discovery">
-            <Button variant="default" size="sm" className="rounded-full px-5">
-              Join
-            </Button>
-          </Link>
+          {isAuthenticated ? (
+            <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="w-4 h-4" />
+                <span className="max-w-[120px] truncate">{user?.email}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={logout}
+                className="rounded-full px-4 text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                Login
+              </Link>
+              <Link href="/register">
+                <Button variant="default" size="sm" className="rounded-full px-5 shadow-lg shadow-primary/10">
+                  Join
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>

@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import { Onboarding } from "@/components/onboarding"
 import { HomeScreen } from "@/components/home-screen"
 import { ImageSelector } from "@/components/image-selector"
@@ -18,10 +20,19 @@ export interface ColorInfo {
 }
 
 export default function Home() {
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const router = useRouter()
   const [screen, setScreen] = useState<AppScreen>("onboarding")
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [pickedColors, setPickedColors] = useState<ColorInfo[]>([])
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null)
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login?callbackUrl=/discovery")
+    }
+  }, [isAuthenticated, authLoading, router])
 
   // Check if user has seen onboarding before
   useEffect(() => {
@@ -38,14 +49,16 @@ export default function Home() {
     setScreen("home")
   }
 
-  // Show nothing while checking localStorage to prevent flash
-  if (hasSeenOnboarding === null) {
+  // Show nothing while checking auth or localStorage to prevent flash
+  if (authLoading || (isAuthenticated && hasSeenOnboarding === null)) {
     return (
       <main className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </main>
     )
   }
+
+  if (!isAuthenticated) return null
 
   const handleImageSelect = (imageUrl: string) => {
     setSelectedImage(imageUrl)
