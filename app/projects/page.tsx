@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { FolderPlus, Folder, MoreHorizontal, ArrowRight, Grid, LayoutList, Plus } from "lucide-react"
+import { FolderPlus, Folder, MoreHorizontal, ArrowRight, Grid, LayoutList, Plus, Trash2 } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
 
 export default function ProjectsPage() {
-    const { user, isAuthenticated, isLoading, createProject } = useAuth()
+    const { user, isAuthenticated, isLoading, createProject, deleteProject } = useAuth()
     const router = useRouter()
     const [newProjectName, setNewProjectName] = useState("")
 
@@ -73,7 +74,21 @@ export default function ProjectsPage() {
                                 <div className="w-14 h-14 rounded-[1.25rem] bg-secondary flex items-center justify-center">
                                     <Folder className="w-6 h-6 text-primary" />
                                 </div>
-                                <Button variant="ghost" size="icon" className="rounded-full -mr-2"><MoreHorizontal className="w-4 h-4" /></Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="rounded-full -mr-2">
+                                            <MoreHorizontal className="w-4 h-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="rounded-2xl p-2 border-border/50">
+                                        <DropdownMenuItem
+                                            className="rounded-xl cursor-pointer text-destructive focus:text-destructive"
+                                            onClick={() => deleteProject(project.id)}
+                                        >
+                                            <Trash2 className="mr-2 w-4 h-4" /> Delete Project
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                             <CardTitle className="text-2xl font-serif font-bold group-hover:text-primary transition-colors">{project.name}</CardTitle>
                             <CardDescription>

@@ -107,7 +107,13 @@ export default function HistoryPage() {
                                             <DropdownMenuItem className="rounded-xl cursor-pointer">
                                                 <FolderPlus className="mr-2 w-4 h-4" /> Add to Project
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem className="rounded-xl cursor-pointer text-destructive focus:text-destructive">
+                                            <DropdownMenuItem
+                                                className="rounded-xl cursor-pointer text-destructive focus:text-destructive"
+                                                onClick={() => {
+                                                    const { deletePalette } = useAuth();
+                                                    deletePalette(palette.id);
+                                                }}
+                                            >
                                                 <Trash2 className="mr-2 w-4 h-4" /> Delete Palette
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>

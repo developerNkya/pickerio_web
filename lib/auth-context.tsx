@@ -32,8 +32,10 @@ interface AuthContextType {
     register: (email: string, password: string, confirmPassword?: string) => Promise<void>
     logout: () => void
     useDiscoveryAttempt: (palette?: string[]) => boolean
-    savePalette: (colors: string[], name?: string, projectId?: string) => void
-    createProject: (name: string) => void
+    savePalette: (colors: string[], name?: string, projectId?: string) => Promise<void>
+    deletePalette: (id: string) => Promise<void>
+    createProject: (name: string) => Promise<void>
+    deleteProject: (id: string) => Promise<void>
     isAuthenticated: boolean
 }
 
@@ -45,30 +47,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter()
 
     useEffect(() => {
-        // Check for user in localStorage on mount
-        const storedUser = localStorage.getItem("pickerio-user")
-        if (storedUser) {
-            setUser(JSON.parse(storedUser))
+        const checkAuth = async () => {
+            try {
+                const res = await fetch("/api/auth/me")
+                if (res.ok) {
+                    const data = await res.json()
+                    setUser(data.user)
+                }
+            } catch (err) {
+                console.error("Auth check failed:", err)
+            } finally {
+                setIsLoading(false)
+            }
         }
-        setIsLoading(false)
+        checkAuth()
     }, [])
 
     const login = async (email: string, password: string) => {
         setIsLoading(true)
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        try {
+            const res = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            })
 
-        // Simulate fetching user with history
-        const stored = localStorage.getItem(`pickerio-data-${email}`)
-        const newUser: User = stored ? JSON.parse(stored) : {
-            email,
-            status: "trial",
-            attemptsRemaining: 3,
-            palettes: [],
-            projects: []
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || "Login failed")
+
+            setUser(data.user)
+        } finally {
+            setIsLoading(false)
         }
-        setUser(newUser)
-        localStorage.setItem("pickerio-user", JSON.stringify(newUser))
-        setIsLoading(false)
     }
 
     const register = async (email: string, password: string, confirmPassword?: string) => {
@@ -77,19 +87,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         setIsLoading(true)
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        try {
+            const res = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            })
 
-        const newUser: User = {
-            email,
-            status: "subscribed",
-            attemptsRemaining: 999,
-            palettes: [],
-            projects: []
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || "Registration failed")
+
+            setUser(data.user)
+        } finally {
+            setIsLoading(false)
         }
-        setUser(newUser)
-        localStorage.setItem("pickerio-user", JSON.stringify(newUser))
-        localStorage.setItem(`pickerio-data-${email}`, JSON.stringify(newUser))
-        setIsLoading(false)
     }
 
     const useDiscoveryAttempt = (palette?: string[]) => {
@@ -98,69 +109,100 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const isSubscribed = user.status === "subscribed"
 
         if (isSubscribed || user.attemptsRemaining > 0) {
-            const updatedUser: User = {
-                ...user,
-                attemptsRemaining: isSubscribed ? user.attemptsRemaining : user.attemptsRemaining - 1,
-                palettes: palette ? [
-                    {
-                        id: Math.random().toString(36).substr(2, 9),
-                        name: `Discovery ${new Date().toLocaleDateString()}`,
-                        colors: palette,
-                        createdAt: new Date().toISOString()
-                    },
-                    ...user.palettes
-                ] : user.palettes
+            // Updated user state locally for immediate UI feedback
+            // In a real app, you'd call an API to decrement attempts and save the palette
+            if (palette) {
+                savePalette(palette, `Discovery ${new Date().toLocaleDateString()}`)
             }
-            setUser(updatedUser)
-            localStorage.setItem("pickerio-user", JSON.stringify(updatedUser))
-            localStorage.setItem(`pickerio-data-${user.email}`, JSON.stringify(updatedUser))
+
+            if (!isSubscribed) {
+                setUser({
+                    ...user,
+                    attemptsRemaining: user.attemptsRemaining - 1
+                })
+            }
             return true
         }
 
         return false
     }
 
-    const savePalette = (colors: string[], name?: string, projectId?: string) => {
+    const savePalette = async (colors: string[], name?: string, projectId?: string) => {
         if (!user) return
-        const updatedUser: User = {
-            ...user,
-            palettes: [
-                {
-                    id: Math.random().toString(36).substr(2, 9),
-                    name: name || `Palette ${user.palettes.length + 1}`,
-                    colors,
-                    createdAt: new Date().toISOString(),
-                    projectId
-                },
-                ...user.palettes
-            ]
+
+        try {
+            const res = await fetch("/api/palettes", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ colors, name, projectId }),
+            })
+
+            if (res.ok) {
+                const data = await res.json()
+                setUser(prev => prev ? {
+                    ...prev,
+                    palettes: [data.palette, ...prev.palettes]
+                } : null)
+            }
+        } catch (err) {
+            console.error("Failed to save palette:", err)
         }
-        setUser(updatedUser)
-        localStorage.setItem("pickerio-user", JSON.stringify(updatedUser))
-        localStorage.setItem(`pickerio-data-${user.email}`, JSON.stringify(updatedUser))
     }
 
-    const createProject = (name: string) => {
+    const createProject = async (name: string) => {
         if (!user) return
-        const updatedUser: User = {
-            ...user,
-            projects: [
-                {
-                    id: Math.random().toString(36).substr(2, 9),
-                    name,
-                    createdAt: new Date().toISOString()
-                },
-                ...user.projects
-            ]
+
+        try {
+            const res = await fetch("/api/projects", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name }),
+            })
+
+            if (res.ok) {
+                const data = await res.json()
+                setUser(prev => prev ? {
+                    ...prev,
+                    projects: [data.project, ...prev.projects]
+                } : null)
+            }
+        } catch (err) {
+            console.error("Failed to create project:", err)
         }
-        setUser(updatedUser)
-        localStorage.setItem("pickerio-user", JSON.stringify(updatedUser))
-        localStorage.setItem(`pickerio-data-${user.email}`, JSON.stringify(updatedUser))
     }
 
-    const logout = () => {
+    const deletePalette = async (id: string) => {
+        try {
+            const res = await fetch(`/api/palettes/${id}`, { method: "DELETE" })
+            if (res.ok) {
+                setUser(prev => prev ? {
+                    ...prev,
+                    palettes: prev.palettes.filter(p => p.id !== id)
+                } : null)
+            }
+        } catch (err) {
+            console.error("Failed to delete palette:", err)
+        }
+    }
+
+    const deleteProject = async (id: string) => {
+        try {
+            const res = await fetch(`/api/projects/${id}`, { method: "DELETE" })
+            if (res.ok) {
+                setUser(prev => prev ? {
+                    ...prev,
+                    projects: prev.projects.filter(p => p.id !== id),
+                    palettes: prev.palettes.filter(p => p.projectId !== id)
+                } : null)
+            }
+        } catch (err) {
+            console.error("Failed to delete project:", err)
+        }
+    }
+
+    const logout = async () => {
+        await fetch("/api/auth/logout", { method: "POST" })
         setUser(null)
-        localStorage.removeItem("pickerio-user")
         router.push("/")
     }
 
@@ -174,7 +216,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 logout,
                 useDiscoveryAttempt,
                 savePalette,
+                deletePalette,
                 createProject,
+                deleteProject,
                 isAuthenticated: !!user,
             }}
         >
