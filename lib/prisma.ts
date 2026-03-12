@@ -1,24 +1,15 @@
+// lib/prisma.ts
 import { PrismaClient } from "@prisma/client"
 
-const prismaClientSingleton = () => {
-    // In Prisma 7, if url is missing from schema, it must be provided here.
-    // datasourceUrl is the correct property for some configurations, 
-    // but let's use the object syntax which is more widely supported if datasourceUrl fails lint.
-    return new PrismaClient({
-        datasources: {
-            db: {
-                url: process.env.DATABASE_URL
-            }
-        }
-    } as any)
-}
-
 declare global {
-    var prisma: undefined | ReturnType<typeof prismaClientSingleton>
+    // Avoid creating multiple instances in dev mode
+    // eslint-disable-next-line no-var
+    var prisma: PrismaClient | undefined
 }
 
-const prisma = globalThis.prisma ?? prismaClientSingleton()
-
-export default prisma
+// Use the existing instance if in dev mode
+const prisma = globalThis.prisma ?? new PrismaClient()
 
 if (process.env.NODE_ENV !== "production") globalThis.prisma = prisma
+
+export default prisma
