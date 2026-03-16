@@ -52,9 +52,9 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold tracking-wide text-primary uppercase">
-                            {user?.status === "trial" ? "Free Trial" : "Pro Subscriber"}
+                            {user?.accountStatus === "trial" ? "Free Trial" : "Pro Subscriber"}
                         </div>
-                        {user?.status === "trial" ? (
+                        {user?.accountStatus === "trial" ? (
                             <div className="space-y-2">
                                 <p className="text-sm font-medium">Attempts Remaining: {user?.attemptsRemaining}/3</p>
                                 <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
@@ -144,9 +144,9 @@ export default function DashboardPage() {
                     <p className="text-muted-foreground text-sm leading-relaxed mb-6">
                         Access every palette you&apos;ve ever discovered. Organized, titled, and ready for use.
                     </p>
-                    <Link href="/history">
+                    <Link href={user?.accountStatus === "subscribed" ? "/history" : "/pricing"}>
                         <Button variant="ghost" className="px-0 text-primary h-auto hover:bg-transparent">
-                            {user?.status === "subscribed" ? "View History" : "Unlock History"} <ExternalLink className="ml-2 w-4 h-4" />
+                            {user?.accountStatus === "subscribed" ? "View History" : "Unlock History"} <ExternalLink className="ml-2 w-4 h-4" />
                         </Button>
                     </Link>
                 </div>
@@ -159,9 +159,9 @@ export default function DashboardPage() {
                     <p className="text-muted-foreground text-sm leading-relaxed mb-6">
                         Export to Tailwind, CSS, SCSS, or Figma. One click to bring your discovery into your workflow.
                     </p>
-                    <Link href="/history">
+                    <Link href={user?.accountStatus === "subscribed" ? "/history" : "/pricing"}>
                         <Button variant="ghost" className="px-0 text-primary h-auto hover:bg-transparent">
-                            {user?.status === "subscribed" ? "Export Tools" : "Unlock Export"} <ExternalLink className="ml-2 w-4 h-4" />
+                            {user?.accountStatus === "subscribed" ? "Export Tools" : "Unlock Export"} <ExternalLink className="ml-2 w-4 h-4" />
                         </Button>
                     </Link>
                 </div>
@@ -174,9 +174,9 @@ export default function DashboardPage() {
                     <p className="text-muted-foreground text-sm leading-relaxed mb-6">
                         Group your palettes by project. Perfect for interior design, branding, or digital art.
                     </p>
-                    <Link href="/projects">
+                    <Link href={user?.accountStatus === "subscribed" ? "/projects" : "/pricing"}>
                         <Button variant="ghost" className="px-0 text-primary h-auto hover:bg-transparent">
-                            {user?.status === "subscribed" ? "View Projects" : "Unlock Projects"} <ExternalLink className="ml-2 w-4 h-4" />
+                            {user?.accountStatus === "subscribed" ? "View Projects" : "Unlock Projects"} <ExternalLink className="ml-2 w-4 h-4" />
                         </Button>
                     </Link>
                 </div>

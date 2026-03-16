@@ -44,6 +44,13 @@ export function Navbar() {
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
             <div className="hidden md:flex items-center gap-4">
+              {user?.accountStatus === "trial" && (
+                <Link href="/pricing">
+                  <Button variant="default" size="sm" className="rounded-full px-4 h-8 bg-gradient-to-r from-primary to-accent border-0 text-primary-foreground text-xs shadow-md">
+                    <Zap className="w-3 h-3 mr-1 fill-current" /> Upgrade
+                  </Button>
+                </Link>
+              )}
               <Link href="/profile" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
                 <User className="w-4 h-4" />
                 <span className="max-w-[120px] truncate">{user?.email}</span>

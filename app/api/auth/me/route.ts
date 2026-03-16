@@ -43,7 +43,7 @@ export async function GET() {
             user: {
                 id: user.id,
                 email: user.email,
-                status: user.status,
+                accountStatus: user.accountStatus,
                 attemptsRemaining: user.attemptsRemaining,
                 palettes: user.palettes,
                 projects: user.projects,

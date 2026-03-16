@@ -19,7 +19,7 @@ interface Project {
 
 interface User {
     email: string
-    status: "trial" | "subscribed"
+    accountStatus: "trial" | "subscribed"
     attemptsRemaining: number
     palettes: Palette[]
     projects: Project[]
@@ -108,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const useDiscoveryAttempt = (palette?: string[]) => {
         if (!user) return false
 
-        const isSubscribed = user.status === "subscribed"
+        const isSubscribed = user.accountStatus === "subscribed"
 
         if (isSubscribed || user.attemptsRemaining > 0) {
             // Updated user state locally for immediate UI feedback

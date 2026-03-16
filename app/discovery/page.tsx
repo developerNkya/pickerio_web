@@ -54,7 +54,7 @@ export default function Home() {
   }
 
   const handleStartDiscovery = () => {
-    if (user?.status === "trial" && user.attemptsRemaining <= 0) {
+    if (user?.accountStatus === "trial" && user.attemptsRemaining <= 0) {
       setAttemptError(true)
       return
     }

@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
         if (existingUser) {
             return NextResponse.json(
-                { error: "User already exists" },
+                { error: "Email already exists" },
                 { status: 400 }
             )
         }
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
             data: {
                 email,
                 password: hashedPassword,
-                status: "trial",
+                accountStatus: "trial",
                 attemptsRemaining: 3,
             },
         })
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
                 user: {
                     id: user.id,
                     email: user.email,
-                    status: user.status,
+                    accountStatus: user.accountStatus,
                     attemptsRemaining: user.attemptsRemaining,
                 },
             },
