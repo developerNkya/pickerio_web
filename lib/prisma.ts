@@ -1,15 +1,31 @@
-// lib/prisma.ts
+// lib/prisma.ts - Simplified for Prisma 5
 import { PrismaClient } from "@prisma/client"
 
 declare global {
-    // Avoid creating multiple instances in dev mode
-    // eslint-disable-next-line no-var
     var prisma: PrismaClient | undefined
 }
 
-// Use the existing instance if in dev mode
-const prisma = globalThis.prisma ?? new PrismaClient()
+function createPrismaClient() {
+    try {
+        if (!process.env.DATABASE_URL) {
+            throw new Error('DATABASE_URL is not set in environment variables')
+        }
 
-if (process.env.NODE_ENV !== "production") globalThis.prisma = prisma
+        return new PrismaClient({
+            log: process.env.NODE_ENV === 'development'
+                ? ['query', 'error', 'warn']
+                : ['error'],
+        })
+    } catch (error) {
+        console.error('Failed to create PrismaClient:', error)
+        throw error
+    }
+}
+
+export const prisma = globalThis.prisma ?? createPrismaClient()
+
+if (process.env.NODE_ENV !== 'production') {
+    globalThis.prisma = prisma
+}
 
 export default prisma

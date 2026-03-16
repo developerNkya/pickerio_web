@@ -88,6 +88,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setIsLoading(true)
         try {
+            console.log('starting..');
+
             const res = await fetch("/api/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
